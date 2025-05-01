@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Simple To-Do List</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>My Tasks</h1>
+      </header>
+
+      <form id="add-task">
+        <input id="add-task-input" type="text" placeholder="Add a new task..." />
+        <button type="submit">Add</button>
+      </form>
+
+      <div class="actions">
+        <button id="clear-completed">Clear Completed</button>
+        <button id="clear-all">Clear All</button>
+      </div>
+
+      <ul id="tasks-list"></ul>
+
+      <!-- Single modal for all confirmations -->
+      <div id="confirmation-modal" class="modal">
+        <div class="modal-content">
+          <p id="modal-message"></p>
+          <div class="modal-actions">
+            <button id="modal-cancel">Cancel</button>
+            <button id="modal-confirm">Confirm</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
