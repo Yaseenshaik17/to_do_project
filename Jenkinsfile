@@ -1,74 +1,30 @@
 pipeline {
     agent any
-
+    
     environment {
-        DOCKER_IMAGE = "to-do-app"
-        CONTAINER_NAME = "to-do-app-production"
-        PORT_MAPPING = "8080:80"
+        DOCKER_HOST = "unix:///var/run/docker.sock"
     }
 
     stages {
-        // Stage 1: Fetch latest code
-        stage('Checkout SCM') {
+        stage('Checkout') {
             steps {
                 git branch: 'main', 
-                url: 'https://github.com/Yaseenshaik17/to_do_project.git'
+                     url: 'https://github.com/Yaseenshaik17/to_do_project.git'
             }
         }
 
-        // Stage 2: Stop and remove old container if exists
-        stage('Cleanup Old Container') {
+        stage('Build and Deploy') {
             steps {
                 script {
-                    try {
-                        sh "docker stop ${CONTAINER_NAME} || true"
-                        sh "docker rm ${CONTAINER_NAME} || true"
-                        echo "Old container removed successfully"
-                    } catch (Exception e) {
-                        echo "No existing container found - proceeding fresh"
-                    }
-                }
-            }
-        }
-
-        // Stage 3: Build new Docker image
-        stage('Build Image') {
-            steps {
-                script {
-                    docker.build("${DOCKER_IMAGE}:${env.BUILD_ID}")
-                }
-            }
-        }
-
-        // Stage 4: Run new container
-        stage('Deploy Updated Container') {
-            steps {
-                script {
-                    sh """
-                    docker run -d \
-                        --name ${CONTAINER_NAME} \
-                        -p ${PORT_MAPPING} \
-                        ${DOCKER_IMAGE}:${env.BUILD_ID}
-                    """
-                }
-            }
-        }
-
-        // Stage 5: Verify deployment
-        stage('Health Check') {
-            steps {
-                script {
-                    timeout(time: 1, unit: 'MINUTES') {
-                        waitUntil {
-                            try {
-                                sh "curl -sSf http://localhost:8080 > /dev/null"
-                                return true
-                            } catch (Exception e) {
-                                return false
-                            }
-                        }
-                    }
-                    echo "Application is healthy and responding"
+                    // Build the Docker image
+                    sh 'docker build -t to-do-app .'
+                    
+                    // Stop and remove old container if exists
+                    sh 'docker stop to-do-app-production || true'
+                    sh 'docker rm to-do-app-production || true'
+                    
+                    // Run new container
+                    sh 'docker run -d -p 8080:80 --name to-do-app-production to-do-app'
                 }
             }
         }
@@ -76,13 +32,10 @@ pipeline {
 
     post {
         always {
-            echo "Pipeline execution completed"
-            // archiveArtifacts artifacts: '**/build/reports/**'
-            // cleanWs() // Optional: Clean workspace
+            echo 'Pipeline completed'
         }
         failure {
-            slackSend channel: '#dev-alerts',
-                     message: "🚨 Pipeline FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+            echo 'Pipeline failed'
         }
     }
 }
